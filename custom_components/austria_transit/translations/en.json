@@ -20,14 +20,16 @@
           "via_stop": "Via stop — search (optional)",
           "direction_filter": "Direction filter by terminus (optional)",
           "max_departures": "Number of departures",
-          "scan_interval": "Refresh interval (seconds)"
+          "scan_interval": "Refresh interval (seconds)",
+          "api_base": "API base URL"
         },
         "data_description": {
           "line_filter": "e.g. \"3\" or \"REX\" — leave empty for all lines",
           "via_stop": "Search for an intermediate stop — e.g. \"Linz Hbf\". The exact stop is looked up from the API.",
           "direction_filter": "Only if no via stop is set: e.g. \"Traun\"",
           "max_departures": "How many upcoming departures to create as sensors (1–10)",
-          "scan_interval": "How often data is refreshed (default 300 s, minimum 30 s)"
+          "scan_interval": "How often data is refreshed (default 300 s, minimum 30 s)",
+          "api_base": "HAFAS REST endpoint — change only if you use a different provider (e.g. https://v6.db.transport.rest/api)"
         }
       },
       "pick_via_stop": {
@@ -53,12 +55,14 @@
           "via_stop": "Via stop — search (optional)",
           "direction_filter": "Direction filter by terminus (optional)",
           "max_departures": "Number of departures",
-          "scan_interval": "Refresh interval (seconds)"
+          "scan_interval": "Refresh interval (seconds)",
+          "api_base": "API base URL"
         },
         "data_description": {
           "line_filter": "e.g. \"3\" or \"REX\" — leave empty for all lines",
           "via_stop": "Shown as the last resolved stop name. Change to search again, clear to remove.",
-          "direction_filter": "Only if no via stop is set"
+          "direction_filter": "Only if no via stop is set",
+          "api_base": "HAFAS REST endpoint — change only if you use a different provider"
         }
       },
       "pick_via_stop": {

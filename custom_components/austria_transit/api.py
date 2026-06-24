@@ -8,7 +8,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import API_BASE, DEFAULT_DURATION
+from .const import API_BASE_DEFAULT, DEFAULT_DURATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +28,13 @@ _SSL_CTX = _build_ssl_context()
 
 
 class AustriaTransitAPI:
-    def __init__(self, session: aiohttp.ClientSession) -> None:
+    def __init__(self, session: aiohttp.ClientSession, base_url: str = API_BASE_DEFAULT) -> None:
         self._session = session
+        self._base = base_url.rstrip("/")
 
     async def search_stops(self, query: str) -> list[dict[str, Any]]:
         """Search stops by name. Returns [{id, name, products}]."""
-        url = f"{API_BASE}/locations"
+        url = f"{self._base}/locations"
         params = {
             "query": query,
             "results": 10,
@@ -78,7 +79,7 @@ class AustriaTransitAPI:
             returned in the ``direction`` field. Only useful when NOT using
             direction_stop_id (the API already filters there).
         """
-        url = f"{API_BASE}/stops/{stop_id}/departures"
+        url = f"{self._base}/stops/{stop_id}/departures"
         params: dict[str, Any] = {
             "results": max_results,
             "duration": duration,

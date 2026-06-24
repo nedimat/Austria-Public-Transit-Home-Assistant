@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import AustriaTransitAPI
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+from .const import CONF_API_BASE, CONF_SCAN_INTERVAL, API_BASE_DEFAULT, DEFAULT_SCAN_INTERVAL
 from .coordinator import AustriaTransitCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,9 +21,8 @@ type AustriaTransitConfigEntry = ConfigEntry[AustriaTransitCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: AustriaTransitConfigEntry) -> bool:
     session = async_get_clientsession(hass)
-    api = AustriaTransitAPI(session)
-
     config = {**entry.data, **entry.options}
+    api = AustriaTransitAPI(session, base_url=config.get(CONF_API_BASE, API_BASE_DEFAULT))
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     coordinator = AustriaTransitCoordinator(hass, api, config, scan_interval)

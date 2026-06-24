@@ -1,7 +1,7 @@
 DOMAIN = "austria_transit"
 
-# /api prefix is required by oebb.transport.rest
-API_BASE = "https://v6.oebb.transport.rest/api"
+API_BASE_DEFAULT = "https://v6.oebb.transport.rest/api"
+API_BASE = API_BASE_DEFAULT  # kept for any direct imports
 
 CONF_STOP_ID = "stop_id"
 CONF_STOP_NAME = "stop_name"
@@ -12,6 +12,7 @@ CONF_VIA_STOP_ID = "via_stop_id"    # resolved stop ID used for matching
 CONF_VIA_STOP_NAME = "via_stop_name"  # resolved display name
 CONF_MAX_DEPARTURES = "max_departures"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_API_BASE = "api_base"
 
 DEFAULT_MAX_DEPARTURES = 5
 DEFAULT_SCAN_INTERVAL = 300  # seconds

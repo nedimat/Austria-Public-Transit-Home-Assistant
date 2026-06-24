@@ -22,6 +22,8 @@ from .const import (
     CONF_VIA_STOP_NAME,
     CONF_MAX_DEPARTURES,
     CONF_SCAN_INTERVAL,
+    CONF_API_BASE,
+    API_BASE_DEFAULT,
     DEFAULT_MAX_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
 )
@@ -121,6 +123,7 @@ class AustriaTransitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_DIRECTION_FILTER, default=""): str,
             vol.Optional(CONF_MAX_DEPARTURES, default=DEFAULT_MAX_DEPARTURES): vol.All(int, vol.Range(min=1, max=10)),
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(int, vol.Range(min=30, max=3600)),
+            vol.Optional(CONF_API_BASE, default=API_BASE_DEFAULT): str,
         })
 
     def _configure_placeholders(self) -> dict:
@@ -164,6 +167,7 @@ class AustriaTransitConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_VIA_STOP_NAME: via_stop["name"] if via_stop else "",
             CONF_MAX_DEPARTURES: p.get(CONF_MAX_DEPARTURES, DEFAULT_MAX_DEPARTURES),
             CONF_SCAN_INTERVAL: p.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            CONF_API_BASE: (p.get(CONF_API_BASE) or API_BASE_DEFAULT).rstrip("/"),
         }
         title = self._prefill["stop_name"]
         if data[CONF_VIA_STOP_NAME]:
@@ -230,6 +234,7 @@ class AustriaTransitOptionsFlow(config_entries.OptionsFlow):
             CONF_LINE_FILTER: cur.get(CONF_LINE_FILTER, ""),
             CONF_VIA_STOP: via_suggested,
             CONF_DIRECTION_FILTER: cur.get(CONF_DIRECTION_FILTER, ""),
+            CONF_API_BASE: cur.get(CONF_API_BASE, API_BASE_DEFAULT),
         }
         return self.async_show_form(
             step_id="init",
@@ -255,6 +260,7 @@ class AustriaTransitOptionsFlow(config_entries.OptionsFlow):
 
     def _save(self, via_stop: dict | None):
         p = self._pending
+        cur = self._merged()
         options = {
             CONF_LINE_FILTER: p.get(CONF_LINE_FILTER) or "",
             CONF_DIRECTION_FILTER: p.get(CONF_DIRECTION_FILTER) or "",
@@ -263,6 +269,7 @@ class AustriaTransitOptionsFlow(config_entries.OptionsFlow):
             CONF_VIA_STOP_NAME: via_stop["name"] if via_stop else "",
             CONF_MAX_DEPARTURES: p.get(CONF_MAX_DEPARTURES, DEFAULT_MAX_DEPARTURES),
             CONF_SCAN_INTERVAL: p.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            CONF_API_BASE: (p.get(CONF_API_BASE) or cur.get(CONF_API_BASE) or API_BASE_DEFAULT).rstrip("/"),
         }
         return self.async_create_entry(data=options)
 
@@ -277,4 +284,5 @@ class AustriaTransitOptionsFlow(config_entries.OptionsFlow):
             vol.Optional(CONF_DIRECTION_FILTER): str,
             vol.Optional(CONF_MAX_DEPARTURES, default=cur.get(CONF_MAX_DEPARTURES, DEFAULT_MAX_DEPARTURES)): vol.All(int, vol.Range(min=1, max=10)),
             vol.Optional(CONF_SCAN_INTERVAL, default=cur.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)): vol.All(int, vol.Range(min=30, max=3600)),
+            vol.Optional(CONF_API_BASE): str,
         })

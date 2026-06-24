@@ -20,14 +20,16 @@
           "via_stop": "Via-Haltestelle – Suche (optional)",
           "direction_filter": "Richtungsfilter nach Endziel (optional)",
           "max_departures": "Anzahl der Abfahrten",
-          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+          "scan_interval": "Aktualisierungsintervall (Sekunden)",
+          "api_base": "API-Basis-URL"
         },
         "data_description": {
           "line_filter": "z. B. „3" oder „REX" – leer lassen für alle Linien",
           "via_stop": "Suchbegriff für Zwischenhalt – z. B. „Linz Hbf". Es wird die genaue Haltestelle aus der API gesucht.",
           "direction_filter": "Nur wenn kein Via-Halt gesetzt: z. B. „Traun"",
           "max_departures": "Wie viele nächste Abfahrten als Sensoren angelegt werden (1–10)",
-          "scan_interval": "Wie oft die Daten aktualisiert werden (Standard 300 s, mind. 30 s)"
+          "scan_interval": "Wie oft die Daten aktualisiert werden (Standard 300 s, mind. 30 s)",
+          "api_base": "HAFAS-REST-Endpunkt – nur ändern, wenn ein anderer Anbieter verwendet wird (z. B. https://v6.db.transport.rest/api)"
         }
       },
       "pick_via_stop": {
@@ -53,12 +55,14 @@
           "via_stop": "Via-Haltestelle – Suche (optional)",
           "direction_filter": "Richtungsfilter nach Endziel (optional)",
           "max_departures": "Anzahl der Abfahrten",
-          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+          "scan_interval": "Aktualisierungsintervall (Sekunden)",
+          "api_base": "API-Basis-URL"
         },
         "data_description": {
           "line_filter": "z. B. „3" oder „REX" – leer lassen für alle Linien",
           "via_stop": "Name der Via-Haltestelle wie zuletzt gespeichert. Ändern um neu zu suchen, leer lassen um zu entfernen.",
-          "direction_filter": "Nur wenn kein Via-Halt gesetzt"
+          "direction_filter": "Nur wenn kein Via-Halt gesetzt",
+          "api_base": "HAFAS-REST-Endpunkt – nur ändern, wenn ein anderer Anbieter verwendet wird"
         }
       },
       "pick_via_stop": {
