@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Austria Transit – Haltestelle suchen",
+        "description": "Geben Sie den Namen einer Haltestelle ein (z. B. „Linz Hauptbahnhof", „Simonystraße", „Wien Westbahnhof").",
+        "data": { "stop_search": "Haltestellenname" },
+        "data_description": { "stop_search": "Mindestens 3 Zeichen eingeben" }
+      },
+      "pick_stop": {
+        "title": "Haltestelle auswählen",
+        "description": "Mehrere Haltestellen gefunden – bitte die richtige auswählen.",
+        "data": { "stop": "Haltestelle" }
+      },
+      "configure": {
+        "title": "Abfahrtsmonitor konfigurieren",
+        "description": "Monitor für **{stop_name}** einrichten.",
+        "data": {
+          "line_filter": "Linienfilter (optional)",
+          "via_stop": "Via-Haltestelle – Suche (optional)",
+          "direction_filter": "Richtungsfilter nach Endziel (optional)",
+          "max_departures": "Anzahl der Abfahrten",
+          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+        },
+        "data_description": {
+          "line_filter": "z. B. „3" oder „REX" – leer lassen für alle Linien",
+          "via_stop": "Suchbegriff für Zwischenhalt – z. B. „Linz Hbf". Es wird die genaue Haltestelle aus der API gesucht.",
+          "direction_filter": "Nur wenn kein Via-Halt gesetzt: z. B. „Traun"",
+          "max_departures": "Wie viele nächste Abfahrten als Sensoren angelegt werden (1–10)",
+          "scan_interval": "Wie oft die Daten aktualisiert werden (mind. 30 s)"
+        }
+      },
+      "pick_via_stop": {
+        "title": "Via-Haltestelle auswählen",
+        "description": "Mehrere Haltestellen für „{via_query}" gefunden – bitte die richtige auswählen.",
+        "data": { "via_stop": "Via-Haltestelle" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Austria-Transit-API nicht möglich",
+      "no_stops_found": "Keine Haltestellen für diesen Suchbegriff gefunden"
+    },
+    "abort": {
+      "already_configured": "Diese Haltestellen-/Richtungskombination ist bereits konfiguriert"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Monitor-Einstellungen aktualisieren",
+        "data": {
+          "line_filter": "Linienfilter (optional)",
+          "via_stop": "Via-Haltestelle – Suche (optional)",
+          "direction_filter": "Richtungsfilter nach Endziel (optional)",
+          "max_departures": "Anzahl der Abfahrten",
+          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+        },
+        "data_description": {
+          "line_filter": "z. B. „3" oder „REX" – leer lassen für alle Linien",
+          "via_stop": "Name der Via-Haltestelle wie zuletzt gespeichert. Ändern um neu zu suchen, leer lassen um zu entfernen.",
+          "direction_filter": "Nur wenn kein Via-Halt gesetzt"
+        }
+      },
+      "pick_via_stop": {
+        "title": "Via-Haltestelle auswählen",
+        "description": "Mehrere Haltestellen gefunden – bitte die richtige auswählen.",
+        "data": { "via_stop": "Via-Haltestelle" }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_departure": { "name": "Nächste Abfahrt" }
+    }
+  }
+}

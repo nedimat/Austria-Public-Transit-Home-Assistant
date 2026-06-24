@@ -1,0 +1,12 @@
+{
+  "domain": "austria_transit",
+  "name": "Austria Transit (ÖBB & Linz AG)",
+  "version": "1.0.0",
+  "documentation": "https://gitlab.com/nbat/austria-public-transit-ha",
+  "issue_tracker": "https://gitlab.com/nbat/austria-public-transit-ha/-/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "iot_class": "cloud_polling",
+  "config_flow": true
+}

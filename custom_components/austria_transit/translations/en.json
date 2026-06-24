@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Austria Transit – Search Stop",
+        "description": "Enter a stop name (e.g. \"Linz Hauptbahnhof\", \"Simonystrasse\", \"Wien Westbahnhof\").",
+        "data": { "stop_search": "Stop name" },
+        "data_description": { "stop_search": "Enter at least 3 characters" }
+      },
+      "pick_stop": {
+        "title": "Select Stop",
+        "description": "Multiple stops found — please select the correct one.",
+        "data": { "stop": "Stop" }
+      },
+      "configure": {
+        "title": "Configure Departure Monitor",
+        "description": "Setting up monitor for **{stop_name}**.",
+        "data": {
+          "line_filter": "Line filter (optional)",
+          "via_stop": "Via stop — search (optional)",
+          "direction_filter": "Direction filter by terminus (optional)",
+          "max_departures": "Number of departures",
+          "scan_interval": "Refresh interval (seconds)"
+        },
+        "data_description": {
+          "line_filter": "e.g. \"3\" or \"REX\" — leave empty for all lines",
+          "via_stop": "Search for an intermediate stop — e.g. \"Linz Hbf\". The exact stop is looked up from the API.",
+          "direction_filter": "Only if no via stop is set: e.g. \"Traun\"",
+          "max_departures": "How many upcoming departures to create as sensors (1–10)",
+          "scan_interval": "How often data is refreshed (minimum 30 s)"
+        }
+      },
+      "pick_via_stop": {
+        "title": "Select Via Stop",
+        "description": "Multiple stops found for \"{via_query}\" — please select the correct one.",
+        "data": { "via_stop": "Via stop" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the Austria Transit API",
+      "no_stops_found": "No stops found for that search term"
+    },
+    "abort": {
+      "already_configured": "This stop and direction combination is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Monitor Settings",
+        "data": {
+          "line_filter": "Line filter (optional)",
+          "via_stop": "Via stop — search (optional)",
+          "direction_filter": "Direction filter by terminus (optional)",
+          "max_departures": "Number of departures",
+          "scan_interval": "Refresh interval (seconds)"
+        },
+        "data_description": {
+          "line_filter": "e.g. \"3\" or \"REX\" — leave empty for all lines",
+          "via_stop": "Shown as the last resolved stop name. Change to search again, clear to remove.",
+          "direction_filter": "Only if no via stop is set"
+        }
+      },
+      "pick_via_stop": {
+        "title": "Select Via Stop",
+        "description": "Multiple stops found — please select the correct one.",
+        "data": { "via_stop": "Via stop" }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_departure": { "name": "Next Departure" }
+    }
+  }
+}

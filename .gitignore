@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Archives / build artifacts
+*.zip
+*.tar.gz
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Home Assistant runtime files (not part of the integration source)
+home-assistant.log
+home-assistant_v2.db

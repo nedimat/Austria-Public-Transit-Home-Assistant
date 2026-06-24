@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#E30613"/>
+  <!-- Train silhouette -->
+  <rect x="96" y="160" width="320" height="192" rx="32" fill="white"/>
+  <rect x="128" y="192" width="96" height="80" rx="8" fill="#E30613"/>
+  <rect x="256" y="192" width="96" height="80" rx="8" fill="#E30613"/>
+  <!-- Wheels -->
+  <circle cx="160" cy="368" r="32" fill="white"/>
+  <circle cx="352" cy="368" r="32" fill="white"/>
+  <circle cx="160" cy="368" r="16" fill="#E30613"/>
+  <circle cx="352" cy="368" r="16" fill="#E30613"/>
+  <!-- Roof stripe -->
+  <rect x="96" y="152" width="320" height="20" rx="10" fill="#CC0000"/>
+</svg>

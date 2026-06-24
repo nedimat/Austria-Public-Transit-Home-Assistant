@@ -1,0 +1,36 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+default:
+  image: python:3.13-slim
+
+stages:
+  - test
+  - secret-detection
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+cache:
+  paths:
+    - .pip-cache/
+
+test:
+  stage: test
+  before_script:
+    - pip install pytest pytest-asyncio aiohttp voluptuous --quiet
+  script:
+    - pytest --tb=short -q --junitxml=report.xml
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+    expire_in: 1 week
+
+sast:
+  stage: test
+  variables:
+    SECRET_DETECTION_ENABLED: 'true'
+
