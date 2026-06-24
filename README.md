@@ -128,4 +128,4 @@ Search at [oebb.at](https://www.oebb.at) or use the integration's built-in searc
 - API: [oebb.transport.rest](https://v6.oebb.transport.rest/) (HAFAS-based, community-operated)
 - Covers all operators in the Austrian national transport network
 - No API key or account required
-- Rate limit: reasonable personal use (60s polling default)
+- Rate limit: reasonable personal use (300 s polling default)

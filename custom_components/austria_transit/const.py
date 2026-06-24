@@ -14,7 +14,7 @@ CONF_MAX_DEPARTURES = "max_departures"
 CONF_SCAN_INTERVAL = "scan_interval"
 
 DEFAULT_MAX_DEPARTURES = 5
-DEFAULT_SCAN_INTERVAL = 60  # seconds
+DEFAULT_SCAN_INTERVAL = 300  # seconds
 DEFAULT_DURATION = 120  # minutes to look ahead
 
 # Exact product values returned by oebb.transport.rest line.product field

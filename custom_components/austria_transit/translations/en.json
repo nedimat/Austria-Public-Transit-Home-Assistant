@@ -27,7 +27,7 @@
           "via_stop": "Search for an intermediate stop — e.g. \"Linz Hbf\". The exact stop is looked up from the API.",
           "direction_filter": "Only if no via stop is set: e.g. \"Traun\"",
           "max_departures": "How many upcoming departures to create as sensors (1–10)",
-          "scan_interval": "How often data is refreshed (minimum 30 s)"
+          "scan_interval": "How often data is refreshed (default 300 s, minimum 30 s)"
         }
       },
       "pick_via_stop": {
