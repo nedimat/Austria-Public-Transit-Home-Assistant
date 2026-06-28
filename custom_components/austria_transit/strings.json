@@ -29,7 +29,7 @@
           "direction_filter": "Nur wenn kein Via-Halt gesetzt: z. B. „Traun"",
           "max_departures": "Wie viele nächste Abfahrten als Sensoren angelegt werden (1–10)",
           "scan_interval": "Wie oft die Daten aktualisiert werden (Standard 300 s, mind. 30 s)",
-          "api_base": "HAFAS-REST-Endpunkt – nur ändern, wenn ein anderer Anbieter verwendet wird (z. B. https://v6.db.transport.rest/api)"
+          "api_base": "ÖBB-mgate-Endpunkt – nur ändern, wenn ein anderer HAFAS-Anbieter verwendet wird"
         }
       },
       "pick_via_stop": {

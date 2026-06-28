@@ -1,27 +1,49 @@
-"""Austria Transit API client using oebb.transport.rest (HAFAS)."""
+"""Austria Transit API client using ÖBB native HAFAS mgate."""
 from __future__ import annotations
 
 import logging
 import ssl
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import aiohttp
 
-from .const import API_BASE_DEFAULT, DEFAULT_DURATION
+from .const import API_BASE_DEFAULT, DEFAULT_DURATION, OEBB_AID
 
 _LOGGER = logging.getLogger(__name__)
 
-# v6.oebb.transport.rest requires TLS but some HA host environments (hardened
-# OpenSSL with SECLEVEL=2) reject the server's cipher suites, causing
-# SSLV3_ALERT_HANDSHAKE_FAILURE. Lowering to SECLEVEL=1 widens the accepted
-# cipher set while keeping certificate verification and hostname checking on.
+_CLIENT = {"id": "OEBB", "type": "WEB", "name": "webapp", "l": "vs_webapp"}
+
+# Amenity/accessibility attribute codes that carry no operational value for commuters
+_AMENITY_CODES = {
+    "OB", "RO", "OA", "OC", "EF", "FK", "WV", "K2", "SB",
+    "A", "AE", "BE", "BH", "BO", "BR", "BT", "BU", "FA",
+    "NF", "RK", "RM", "gi", "gc",
+}
+
+# Codes that are internal mgate control flags, not human-readable text
+_INTERNAL_CODES = {"showAsEmergency"}
+
+# Map trimmed catOut value → our internal product type
+_CAT_TO_PRODUCT: dict[str, str] = {
+    "RJ": "nationalExpress", "ICE": "nationalExpress",
+    "NJ": "nationalExpress", "EN": "nationalExpress",
+    "EC": "national", "IC": "national",
+    "D": "interregional",
+    "REX": "regional", "R": "regional", "CJX": "regional",
+    "S": "suburban",
+    "BUS": "bus", "OBUS": "bus",
+    "U": "subway",
+    "STR": "tram", "TRAM": "tram",
+}
+
+
 def _build_ssl_context() -> ssl.SSLContext:
     ctx = ssl.create_default_context()
     try:
         ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
     except ssl.SSLError:
-        pass  # already permissive enough on this platform
+        pass
     return ctx
 
 _SSL_CTX = _build_ssl_context()
@@ -30,30 +52,53 @@ _SSL_CTX = _build_ssl_context()
 class AustriaTransitAPI:
     def __init__(self, session: aiohttp.ClientSession, base_url: str = API_BASE_DEFAULT) -> None:
         self._session = session
-        self._base = base_url.rstrip("/")
+        self._url = base_url.rstrip("/")
+
+    def _envelope(self, requests: list[dict]) -> dict:
+        return {
+            "svcReqL": requests,
+            "auth": {"type": "AID", "aid": OEBB_AID},
+            "client": _CLIENT,
+            "ver": "1.67",
+            "lang": "deu",
+            "formatted": False,
+        }
+
+    async def _post(self, payload: dict) -> dict:
+        async with self._session.post(
+            self._url,
+            json=payload,
+            timeout=aiohttp.ClientTimeout(total=15),
+            ssl=_SSL_CTX,
+        ) as resp:
+            resp.raise_for_status()
+            return await resp.json(content_type=None)
 
     async def search_stops(self, query: str) -> list[dict[str, Any]]:
         """Search stops by name. Returns [{id, name, products}]."""
-        url = f"{self._base}/locations"
-        params = {
-            "query": query,
-            "results": 10,
-            "stops": "true",
-            "poi": "false",
-            "addresses": "false",
-        }
-        async with self._session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10), ssl=_SSL_CTX) as resp:
-            resp.raise_for_status()
-            data: list[dict] = await resp.json()
-
+        payload = self._envelope([{
+            "meth": "LocMatch",
+            "req": {
+                "input": {
+                    "loc": {"name": query, "type": "S"},
+                    "maxLoc": 10,
+                    "field": "S",
+                },
+            },
+        }])
+        data = await self._post(payload)
+        svc = data["svcResL"][0]
+        if svc.get("err") != "OK":
+            return []
+        locs: list[dict] = svc["res"]["match"].get("locL") or []
         return [
             {
-                "id": loc["id"],
+                "id": loc["extId"],
                 "name": loc["name"],
-                "products": [k for k, v in (loc.get("products") or {}).items() if v],
+                "products": _pcls_to_products(loc.get("pCls", 0)),
             }
-            for loc in data
-            if loc.get("type") == "stop"
+            for loc in locs
+            if loc.get("type") == "S" and loc.get("extId")
         ]
 
     async def get_departures(
@@ -67,99 +112,172 @@ class AustriaTransitAPI:
     ) -> list[dict[str, Any]]:
         """Fetch departures from a stop.
 
-        direction_stop_id: HAFAS stop ID passed as ``direction`` query param.
-            The API returns only trips whose route passes through that stop.
-            This is the correct way to filter "via" an intermediate stop.
+        direction_stop_id: HAFAS stop ID used as dirLoc — the mgate filters
+            server-side to only trips whose route passes through that stop.
 
-        line_filter: comma-separated line names (e.g. "3,4" or "REX,WB").
-            Matched case-insensitively against line.name; a departure is kept
-            if it matches ANY of the supplied names (OR logic).
+        line_filter: comma-separated short line names (e.g. "S2,REX").
+            Matched case-insensitively against nameS; OR logic.
 
-        direction_text_filter: optional substring match on the terminus name
-            returned in the ``direction`` field. Only useful when NOT using
-            direction_stop_id (the API already filters there).
+        direction_text_filter: substring match on the terminus (dirTxt).
+            Only useful when direction_stop_id is not set.
         """
-        url = f"{self._base}/stops/{stop_id}/departures"
-        params: dict[str, Any] = {
-            "results": max_results,
-            "duration": duration,
-            "stopovers": "false",
-            "language": "de",
+        now = datetime.now()
+        req: dict[str, Any] = {
+            "type": "DEP",
+            "stbLoc": {"extId": stop_id, "type": "S"},
+            "maxJny": max_results,
+            "date": now.strftime("%Y%m%d"),
+            "time": now.strftime("%H%M%S"),
+            "dur": duration,
         }
         if direction_stop_id:
-            # The HAFAS direction param accepts a stop ID and returns only trips
-            # whose itinerary passes through that stop. No stopovers needed.
-            params["direction"] = direction_stop_id
+            req["dirLoc"] = {"extId": direction_stop_id, "type": "S"}
 
-        try:
-            async with self._session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=15), ssl=_SSL_CTX) as resp:
-                resp.raise_for_status()
-                data = await resp.json()
-        except aiohttp.ClientError:
-            raise
+        data = await self._post(self._envelope([{"meth": "StationBoard", "req": req}]))
+        svc = data["svcResL"][0]
+        if svc.get("err") != "OK":
+            _LOGGER.warning("StationBoard error: %s", svc.get("err"))
+            return []
 
-        raw_departures: list[dict] = data.get("departures", [])
+        res = svc["res"]
+        common = res.get("common", {})
+        prod_list: list[dict] = common.get("prodL", [])
+        op_list: list[dict] = common.get("opL", [])
+        rem_list: list[dict] = common.get("remL", [])
+        him_list: list[dict] = common.get("himL", [])
 
-        # Build normalised line filter set for O(1) lookup
         line_filters: set[str] = set()
         if line_filter:
             line_filters = {f.strip().lower() for f in line_filter.split(",") if f.strip()}
 
         departures = []
-        for dep in raw_departures:
-            line: dict = dep.get("line") or {}
-            direction: str = dep.get("direction") or ""
-            line_name: str = line.get("name") or line.get("id") or "?"
-            product: str = line.get("product") or ""
+        for jny in res.get("jnyL", []):
+            stb: dict = jny.get("stbStop", {})
+            jny_date: str = jny.get("date", now.strftime("%Y%m%d"))
 
-            # Multi-line filter: keep if line_name matches any of the filters
+            prod_idx = jny.get("prodX")
+            prod = prod_list[prod_idx] if prod_idx is not None and prod_idx < len(prod_list) else {}
+            prod_ctx: dict = prod.get("prodCtx", {})
+
+            line_name: str = (prod.get("nameS") or prod.get("name") or "?").strip()
+            product: str = _cat_to_product(prod_ctx)
+
+            op_idx = prod.get("oprX")
+            operator: str = op_list[op_idx]["name"] if op_idx is not None and op_idx < len(op_list) else ""
+
+            direction: str = jny.get("dirTxt") or ""
+
             if line_filters and not any(f in line_name.lower() for f in line_filters):
                 continue
-
-            # Optional terminus-name substring match (only meaningful without direction_stop_id)
             if direction_text_filter and direction_text_filter.lower() not in direction.lower():
                 continue
 
-            when_str: str | None = dep.get("when") or dep.get("plannedWhen")
-            planned_str: str | None = dep.get("plannedWhen") or when_str
-            delay_seconds: int = dep.get("delay") or 0
+            tz_offset = stb.get("dTZOffset")
+            tz = timezone(timedelta(minutes=tz_offset)) if tz_offset is not None else None
 
-            when_dt = _parse_iso(when_str)
-            planned_dt = _parse_iso(planned_str)
-            if when_dt is None:
+            planned_dt = _parse_dt(jny_date, stb.get("dTimeS"), tz)
+            if planned_dt is None:
                 continue
+            real_dt = _parse_dt(jny_date, stb.get("dTimeR"), tz) if stb.get("dTimeR") else planned_dt
+            when_dt = real_dt
 
-            cancelled = dep.get("prognosisType") == "cancelled"
+            delay_minutes = 0
+            if real_dt != planned_dt:
+                delay_minutes = round((real_dt - planned_dt).total_seconds() / 60)
 
-            remarks = [
-                {"code": r.get("code", ""), "text": r.get("text", "")}
-                for r in (dep.get("remarks") or [])
-                if r.get("type") == "hint" and r.get("text")
-            ]
+            cancelled = stb.get("dCncl", False) or stb.get("aCncl", False)
+
+            platform = _platform(stb.get("dPltfR") or stb.get("dPltfS"))
+            planned_platform = _platform(stb.get("dPltfS"))
+
+            remarks = _extract_remarks(jny.get("msgL", []), rem_list, him_list)
 
             departures.append({
                 "direction": direction,
                 "line": line_name,
                 "product": product,
-                "operator": (line.get("operator") or {}).get("name", ""),
+                "operator": operator,
                 "when": when_dt,
                 "planned_when": planned_dt,
-                "delay_minutes": round(delay_seconds / 60) if delay_seconds else 0,
-                "platform": dep.get("platform"),
-                "planned_platform": dep.get("plannedPlatform"),
+                "delay_minutes": delay_minutes,
+                "platform": platform,
+                "planned_platform": planned_platform,
                 "cancelled": cancelled,
                 "remarks": remarks,
-                "trip_id": dep.get("tripId"),
+                "trip_id": jny.get("jid"),
             })
 
         departures.sort(key=lambda d: d["when"])
         return departures
 
 
-def _parse_iso(value: str | None) -> datetime | None:
-    if not value:
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _parse_dt(date_str: str, time_str: str | None, tz: timezone | None) -> datetime | None:
+    if not time_str or not date_str:
         return None
     try:
-        return datetime.fromisoformat(value)
-    except (ValueError, TypeError):
+        h = int(time_str[0:2])
+        m = int(time_str[2:4])
+        s = int(time_str[4:6]) if len(time_str) >= 6 else 0
+        base = datetime.strptime(date_str, "%Y%m%d")
+        dt = base + timedelta(hours=h, minutes=m, seconds=s)
+        return dt.replace(tzinfo=tz) if tz else dt
+    except (ValueError, TypeError, IndexError):
         return None
+
+
+def _platform(pltf: dict | str | None) -> str | None:
+    if pltf is None:
+        return None
+    if isinstance(pltf, dict):
+        return pltf.get("txt")
+    return str(pltf)
+
+
+def _cat_to_product(prod_ctx: dict) -> str:
+    cat = (prod_ctx.get("catOut") or prod_ctx.get("catOutS") or "").strip().upper()
+    return _CAT_TO_PRODUCT.get(cat, "regional")
+
+
+def _pcls_to_products(pcls: int) -> list[str]:
+    """Convert pCls bitmask to list of product type strings."""
+    bits = {1: "nationalExpress", 4: "national", 8: "interregional",
+            16: "regional", 32: "suburban", 64: "bus",
+            128: "subway", 256: "tram", 512: "onCall"}
+    return [name for bit, name in bits.items() if pcls & bit]
+
+
+def _extract_remarks(msg_list: list[dict], rem_list: list[dict], him_list: list[dict]) -> list[dict]:
+    remarks = []
+    seen: set[str] = set()
+
+    for msg in msg_list:
+        msg_type = msg.get("type")
+        if msg_type == "REM":
+            idx = msg.get("remX")
+            if idx is None or idx >= len(rem_list):
+                continue
+            rem = rem_list[idx]
+            code = rem.get("code", "") or ""
+            if code in _AMENITY_CODES or code in _INTERNAL_CODES:
+                continue
+            text = (rem.get("txtN") or rem.get("txtS") or rem.get("txt") or "").strip()
+            if text and text not in seen:
+                seen.add(text)
+                remarks.append({"code": code, "text": text})
+        elif msg_type == "HIM":
+            idx = msg.get("himX")
+            if idx is None or idx >= len(him_list):
+                continue
+            him = him_list[idx]
+            if not him.get("act", True):
+                continue
+            text = (him.get("text") or him.get("lead") or him.get("head") or "").strip()
+            if text and text not in seen:
+                seen.add(text)
+                remarks.append({"code": "", "text": text})
+
+    return remarks

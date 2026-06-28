@@ -1,6 +1,9 @@
 DOMAIN = "austria_transit"
 
-API_BASE_DEFAULT = "https://v6.oebb.transport.rest/api"
+# ÖBB native HAFAS mgate endpoint (used by ÖBB's own web journey planner).
+# AID is a public client identifier; ÖBB may rotate or rate-limit it.
+API_BASE_DEFAULT = "https://fahrplan.oebb.at/bin/mgate.exe"
+OEBB_AID = "OWDL4fE4ixNiPBBm"
 API_BASE = API_BASE_DEFAULT  # kept for any direct imports
 
 CONF_STOP_ID = "stop_id"

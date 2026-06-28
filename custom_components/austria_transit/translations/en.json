@@ -29,7 +29,7 @@
           "direction_filter": "Only if no via stop is set: e.g. \"Traun\"",
           "max_departures": "How many upcoming departures to create as sensors (1–10)",
           "scan_interval": "How often data is refreshed (default 300 s, minimum 30 s)",
-          "api_base": "HAFAS REST endpoint — change only if you use a different provider (e.g. https://v6.db.transport.rest/api)"
+          "api_base": "ÖBB mgate endpoint — change only if you use a different HAFAS provider"
         }
       },
       "pick_via_stop": {
