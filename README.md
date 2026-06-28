@@ -2,7 +2,7 @@
 
 Departure monitor for **ÖBB trains**, **Linz AG trams & buses**, and all other Austrian public transport.
 
-Uses the free [`oebb.transport.rest`](https://v6.oebb.transport.rest/) HAFAS API — no API key required.
+Uses the **ÖBB HAFAS mgate** (`fahrplan.oebb.at`) — the same backend as ÖBB's own journey planner. No API key or account required.
 
 ---
 
@@ -10,7 +10,7 @@ Uses the free [`oebb.transport.rest`](https://v6.oebb.transport.rest/) HAFAS API
 
 - Real-time departures with delay information
 - Supports all Austrian operators: ÖBB, Linz AG, Wiener Linien, S-Bahn, regional buses
-- Direction and line filtering per monitor
+- Direction (via-stop) and line filtering per monitor
 - Custom Lovelace card with color-coded delays
 - Multiple departure sensors per stop (configurable 1–10)
 - Works with automations (e.g. notify when train is delayed)
@@ -41,8 +41,8 @@ HACS only supports GitHub repositories. If you want one-click HACS installation,
 1. **Settings → Devices & Services → Add Integration → "Austria Transit"**
 2. Type a stop name (e.g. `Linz Hbf`, `Simonystraße`, `Wien Westbahnhof`)
 3. Pick the correct stop from the list
-4. Optionally set a **direction filter** (e.g. `Wien` or `Traun`) and **line filter** (e.g. `3` or `REX`)
-5. Choose how many departures to track (1–10)
+4. Optionally set a **via-stop** (direction filter by intermediate stop), **line filter** (e.g. `3` or `REX,WB`), or **terminus filter**
+5. Choose how many departures to track (1–10) and the refresh interval (default 300 s)
 
 Add multiple entries for multiple stops or directions.
 
@@ -106,7 +106,7 @@ automation:
 
 ## Finding Stop Names
 
-Search at [oebb.at](https://www.oebb.at) or use the integration's built-in search — it searches all Austrian stops.
+Use the integration's built-in search or look up stop names at [fahrplan.oebb.at](https://fahrplan.oebb.at).
 
 **Common Linz AG stops:** `Hauptplatz`, `Simonystraße`, `Universität`, `Bulgariplatz`, `Linz Hbf`
 
@@ -125,7 +125,8 @@ Search at [oebb.at](https://www.oebb.at) or use the integration's built-in searc
 
 ## Data Source
 
-- API: [oebb.transport.rest](https://v6.oebb.transport.rest/) (HAFAS-based, community-operated)
+- API: ÖBB HAFAS mgate (`fahrplan.oebb.at/bin/mgate.exe`) — the same backend used by ÖBB's own journey planner
 - Covers all operators in the Austrian national transport network
-- No API key or account required
-- Rate limit: reasonable personal use (300 s polling default)
+- No API key or account required; uses a public client identifier
+- Default refresh interval: 300 s (configurable per monitor, minimum 30 s)
+- The API base URL is configurable in the integration options if you need to point to a different HAFAS provider
