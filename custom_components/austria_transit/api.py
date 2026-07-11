@@ -121,13 +121,10 @@ class AustriaTransitAPI:
         direction_text_filter: substring match on the terminus (dirTxt).
             Only useful when direction_stop_id is not set.
         """
-        now = datetime.now()
         req: dict[str, Any] = {
             "type": "DEP",
             "stbLoc": {"extId": stop_id, "type": "S"},
             "maxJny": max_results,
-            "date": now.strftime("%Y%m%d"),
-            "time": now.strftime("%H%M%S"),
             "dur": duration,
         }
         if direction_stop_id:
@@ -153,7 +150,7 @@ class AustriaTransitAPI:
         departures = []
         for jny in res.get("jnyL", []):
             stb: dict = jny.get("stbStop", {})
-            jny_date: str = jny.get("date", now.strftime("%Y%m%d"))
+            jny_date: str | None = jny.get("date")
 
             prod_idx = jny.get("prodX")
             prod = prod_list[prod_idx] if prod_idx is not None and prod_idx < len(prod_list) else {}

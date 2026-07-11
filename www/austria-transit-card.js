@@ -360,7 +360,7 @@ class AustriaTransitCommuteCard extends HTMLElement {
 
   _render() {
     const hass = this._hass;
-    const title = this._config.title || (hass.language||'').startsWith('de') ? 'Mein Pendlerweg' : 'My commute';
+    const title = this._config.title || ((hass.language||'').startsWith('de') ? 'Mein Pendlerweg' : 'My commute');
 
     const legsHtml = this._config.legs.map((leg, i) => {
       const state = leg.entity ? hass.states[leg.entity] : null;
