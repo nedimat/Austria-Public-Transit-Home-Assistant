@@ -297,8 +297,11 @@ class AustriaTransitCommuteEditor extends HTMLElement {
       </div>`;
 
     this.querySelector('#add-leg').addEventListener('click', () => {
+      const avail = this._hass
+        ? Object.keys(this._hass.states).filter(e => e.startsWith('sensor.') && e.endsWith('_next_departure')).sort()
+        : [];
       const cur = (this._config.legs || [{}]).slice();
-      cur.push({});
+      cur.push({ entity: avail[0] || '' });
       this._fire({ ...this._config, legs: cur });
     });
     this.querySelectorAll('.rm').forEach(btn => btn.addEventListener('click', e => {
@@ -364,7 +367,10 @@ class AustriaTransitCommuteCard extends HTMLElement {
 
     const legsHtml = this._config.legs.map((leg, i) => {
       const state = leg.entity ? hass.states[leg.entity] : null;
-      if (!state) return `<div class="cl-leg cl-err">Entity not found: ${esc(leg.entity)}</div>`;
+      if (!state) {
+        if (!leg.entity) return `<div class="cl-leg"><div class="cl-none">—</div></div>`;
+        return `<div class="cl-leg cl-err">Entity not found: ${esc(leg.entity)}</div>`;
+      }
 
       const attrs = state.attributes;
       const deps = attrs.departure_list || [];
