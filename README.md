@@ -19,20 +19,20 @@ Uses the **ÖBB HAFAS mgate** (`fahrplan.oebb.at`) — the same backend as ÖBB'
 
 ## Installation
 
-### Manual (recommended)
+### Via HACS (recommended)
 
-1. Download or clone this repository
-2. Copy `custom_components/austria_transit/` to your HA `config/custom_components/` folder
-3. Copy `www/austria-transit-card.js` to `config/www/`
-4. Restart Home Assistant
-
-### Via HACS
-
-HACS only supports GitHub repositories. If you want one-click HACS installation, mirror this repo to GitHub and add it as a custom repository there:
+HACS only supports GitHub repositories. Mirror this repo to GitHub, then:
 
 1. In HACS → **Integrations** → ⋮ → **Custom repositories**
-2. Add your GitHub mirror URL — Category: **Integration**
+2. Add your GitHub URL — Category: **Integration**
 3. Install "Austria Transit" and restart Home Assistant
+
+The Lovelace card is bundled inside the integration — no separate file copy needed. After restart, register it as a resource (see [Dashboard Card](#dashboard-card) below).
+
+### Manual
+
+1. Copy `custom_components/austria_transit/` to your HA `config/custom_components/` folder
+2. Restart Home Assistant
 
 ---
 
@@ -50,10 +50,10 @@ Add multiple entries for multiple stops or directions.
 
 ## Dashboard Card
 
-After copying `www/austria-transit-card.js`, register the resource in HA:
+Register the card as a Lovelace resource (one-time setup after installing the integration):
 
 **Settings → Dashboards → ⋮ → Resources → Add**
-- URL: `/local/austria-transit-card.js`
+- URL: `/austria_transit/austria-transit-card.js`
 - Type: JavaScript module
 
 ### Lovelace YAML

@@ -1,6 +1,6 @@
 ## Austria Transit
 
-Real-time departure monitor for **ÖBB trains**, **Linz AG trams & buses**, and all other Austrian public transport — powered by the free [oebb.transport.rest](https://v6.oebb.transport.rest/) HAFAS API. No API key required.
+Real-time departure monitor for **ÖBB trains**, **Linz AG trams & buses**, and all other Austrian public transport — powered by the official ÖBB HAFAS mgate API. No API key required.
 
 ### Features
 
@@ -12,8 +12,8 @@ Real-time departure monitor for **ÖBB trains**, **Linz AG trams & buses**, and 
 
 ### Installation
 
-Copy `custom_components/austria_transit/` to `config/custom_components/` and `www/austria-transit-card.js` to `config/www/`, then restart Home Assistant.
-
-After restart: **Settings → Devices & Services → Add Integration → Austria Transit**
-
-Register the card as a Lovelace resource: **Settings → Dashboards → ⋮ → Resources → Add** → URL `/local/austria-transit-card.js` → JavaScript module
+1. Install via HACS and restart Home Assistant
+2. **Settings → Devices & Services → Add Integration → Austria Transit**
+3. Register the Lovelace card resource once:
+   **Settings → Dashboards → ⋮ → Resources → Add**
+   URL: `/austria_transit/austria-transit-card.js` — Type: JavaScript module

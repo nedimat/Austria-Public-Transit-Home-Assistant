@@ -2,21 +2,33 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import AustriaTransitAPI
-from .const import CONF_API_BASE, CONF_SCAN_INTERVAL, API_BASE_DEFAULT, DEFAULT_SCAN_INTERVAL
+from .const import CONF_API_BASE, CONF_SCAN_INTERVAL, API_BASE_DEFAULT, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import AustriaTransitCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
+_CARD_URL = "/austria_transit/austria-transit-card.js"
+_CARD_FILE = str(Path(__file__).parent / "www" / "austria-transit-card.js")
+
 type AustriaTransitConfigEntry = ConfigEntry[AustriaTransitCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(_CARD_URL, _CARD_FILE, cache_headers=True)
+    ])
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AustriaTransitConfigEntry) -> bool:
