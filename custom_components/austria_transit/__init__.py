@@ -6,8 +6,8 @@ from pathlib import Path
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import AustriaTransitAPI
@@ -24,10 +24,38 @@ _CARD_FILE = str(Path(__file__).parent / "www" / "austria-transit-card.js")
 type AustriaTransitConfigEntry = ConfigEntry[AustriaTransitCoordinator]
 
 
+async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
+    """Add the card JS to Lovelace resources if not already present."""
+    try:
+        resources = hass.data.get("lovelace", {}).get("resources")
+        if resources is None:
+            _LOGGER.warning("Austria Transit: lovelace resources not available; add %s manually", _CARD_URL)
+            return
+        await resources.async_get_info()
+        if any(item["url"] == _CARD_URL for item in resources.async_items()):
+            return
+        await resources.async_create_item({"res_type": "module", "url": _CARD_URL})
+        _LOGGER.info("Austria Transit: registered Lovelace resource %s", _CARD_URL)
+    except Exception:
+        _LOGGER.exception("Austria Transit: failed to register Lovelace resource")
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await hass.http.async_register_static_paths([
         StaticPathConfig(_CARD_URL, _CARD_FILE, cache_headers=True)
     ])
+
+    async def _do_register(_event=None) -> None:
+        await _async_register_lovelace_resource(hass)
+
+    if hass.is_running:
+        hass.async_create_task(_do_register())
+    else:
+        @callback
+        def _on_ha_started(event) -> None:
+            hass.async_create_task(_do_register())
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
+
     return True
 
 
